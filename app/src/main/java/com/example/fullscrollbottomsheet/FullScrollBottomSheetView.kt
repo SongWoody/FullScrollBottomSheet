@@ -27,37 +27,17 @@ class FullScrollBottomSheetView : NestedScrollView {
         attrs,
         defStyleAttr
     )
-
-    override fun onAttachedToWindow() {
-        val ctx = context
-        if (ctx is Activity) {
-            decorView = ctx.window.decorView
-            decorView?.viewTreeObserver?.addOnGlobalLayoutListener(preDrawListener)
-        }
-
-        super.onAttachedToWindow()
-    }
-
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        val rect = Rect()
-        IntArray(2).let { xy ->
-            view.getLocationOnScreen(xy)
-            rect.top = xy[1]
-            rect.bottom = xy[1] + view.height
-            rect.left = xy[0]
-            rect.right = xy[0] + view.width
-        }
-
-
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                enableScroll = rect.contains(ev.rawX.toInt(), ev.rawY.toInt())
+                enableScroll = getContentViewRect().contains(ev.rawX.toInt(), ev.rawY.toInt())
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 enableScroll = true
             }
         }
         if (enableScroll) {
+            // scroll 을 dispatchTouchEvent 에서 소화
             super.onTouchEvent(ev)
         }
 
@@ -68,11 +48,13 @@ class FullScrollBottomSheetView : NestedScrollView {
         return enableScroll
     }
 
-    private val preDrawListener = ViewTreeObserver.OnGlobalLayoutListener {
-        decorView?.let{
-            parentHeight = it.height
+    private fun getContentViewRect(): Rect = Rect().apply {
+        IntArray(2).let { xy ->
+            view.getLocationOnScreen(xy)
+            this.top = xy[1]
+            this.bottom = xy[1] + view.height
+            this.left = xy[0]
+            this.right = xy[0] + view.width
         }
-        true
     }
-
 }

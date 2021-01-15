@@ -49,9 +49,22 @@
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
-        <FrameLayout
-            android:id="@+id/mFullScrollBottomSheet"
+        <com.example.fullscrollbottomsheet.FullScrollBottomSheetView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="500dp">
+
+                <FrameLayout
+                    android:id="@+id/mFullScrollBottomSheet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </com.example.fullscrollbottomsheet.FullScrollBottomSheetView>
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
