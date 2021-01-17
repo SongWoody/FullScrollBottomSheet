@@ -1,23 +1,18 @@
 package com.example.fullscrollbottomsheet
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewTreeObserver
-import android.widget.LinearLayout
+import android.view.ViewGroup
 import androidx.core.widget.NestedScrollView
 
 class FullScrollBottomSheetView : NestedScrollView {
-    private var decorView: View? = null
-    private var parentHeight = 0
     private var enableScroll = true
 
     private val view: View by lazy {
-        (getChildAt(0) as LinearLayout).getChildAt(0)
+        (getChildAt(0) as ViewGroup).getChildAt(0)
     }
 
     constructor(context: Context) : super(context)
