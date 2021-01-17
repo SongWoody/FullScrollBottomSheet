@@ -1,6 +1,8 @@
 package com.example.fullscrollbottomsheet
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.TypedArray
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -15,13 +17,30 @@ class FullScrollBottomSheetView : NestedScrollView {
         (getChildAt(0) as ViewGroup).getChildAt(0)
     }
 
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    //attrs
+    private var fromEnd: Int = 0
+
+    constructor(context: Context) : this(context, null)
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
         context,
         attrs,
         defStyleAttr
-    )
+    ) {
+        initialize(attrs)
+    }
+
+    private fun initialize(attrs: AttributeSet?) {
+       settingAttrs(attrs)
+    }
+
+    private fun settingAttrs(attrs: AttributeSet?) {
+        val typedArray: TypedArray = context.obtainStyledAttributes(attrs, R.styleable.FullScrollBottomSheetView)
+
+        fromEnd = typedArray.getDimensionPixelSize(R.styleable.FullScrollBottomSheetView_fromEnd, 0)
+        typedArray.recycle()
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -39,6 +58,7 @@ class FullScrollBottomSheetView : NestedScrollView {
         return super.dispatchTouchEvent(ev)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         return enableScroll
     }
@@ -51,5 +71,15 @@ class FullScrollBottomSheetView : NestedScrollView {
             this.left = xy[0]
             this.right = xy[0] + view.width
         }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val heightPx = MeasureSpec.getSize(heightMeasureSpec)
+
+        if (childCount > 0) {
+            val child = getChildAt(0)
+            child.setPadding(0,heightPx - fromEnd,0,0)
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 }
