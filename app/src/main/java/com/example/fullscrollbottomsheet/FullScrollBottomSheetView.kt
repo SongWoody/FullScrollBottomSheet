@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IntDef
 import androidx.core.widget.NestedScrollView
+import com.example.fullscrollbottomsheet.utils.dpToPx
 
 class FullScrollBottomSheetView : NestedScrollView {
     @IntDef(value = [STATE_HIDDEN, STATE_HALF, STATE_EXPAND, STATE_OVER])
@@ -23,12 +24,26 @@ class FullScrollBottomSheetView : NestedScrollView {
         const val STATE_OVER    = 3
     }
 
-
+    @BottomSheetState var state: Int? = STATE_HIDDEN
     private var enableScroll = true
 
     private val view: View by lazy {
         (getChildAt(0) as ViewGroup).getChildAt(0)
     }
+    private val scrollViewY: Int by lazy {
+        IntArray(2).let {
+            this.getLocationOnScreen(it)
+            return@lazy it[1]
+        }
+    }
+
+    var stateDeterminedRageDP = 80
+    var flingGestureDeterminedRangeDp = 10
+    var moveGestureDeterminedRangeDp = 10
+
+    private var hiddenPositionY = 0
+    private var halfPositionY = 0
+    private var expandPositionY = 0
 
     //attrs
     private var fromTop: Int = 0
@@ -45,7 +60,7 @@ class FullScrollBottomSheetView : NestedScrollView {
     }
 
     private fun initialize(attrs: AttributeSet?) {
-       settingAttrs(attrs)
+        settingAttrs(attrs)
     }
 
     private fun settingAttrs(attrs: AttributeSet?) {
@@ -59,19 +74,33 @@ class FullScrollBottomSheetView : NestedScrollView {
         typedArray.recycle()
     }
 
+    var touchStartPosition  = 0
+    var touchMiddlePosition = 0
+    var touchEndPosition    = 0
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val contentRect = getContentViewRect()
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                enableScroll = getContentViewRect().contains(ev.rawX.toInt(), ev.rawY.toInt())
+                touchStartPosition = contentRect.top - scrollViewY
+                enableScroll = contentRect.contains(ev.rawX.toInt(), ev.rawY.toInt())
+            }
+            MotionEvent.ACTION_MOVE -> {
+                touchMiddlePosition = contentRect.top - scrollViewY
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                touchEndPosition = contentRect.top - scrollViewY
                 enableScroll = true
             }
         }
         if (enableScroll) {
             // scroll 을 dispatchTouchEvent 에서 소화
             super.onTouchEvent(ev)
+
+            if (ev.actionMasked == MotionEvent.ACTION_UP) {
+                detectGesture(touchStartPosition, touchMiddlePosition, touchEndPosition)
+            }
         }
+
 
         return super.dispatchTouchEvent(ev)
     }
@@ -93,6 +122,9 @@ class FullScrollBottomSheetView : NestedScrollView {
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val heightPx = MeasureSpec.getSize(heightMeasureSpec)
+        hiddenPositionY = heightPx - fromEnd
+        halfPositionY = heightPx / 2
+        expandPositionY = 0 + fromTop
 
         if (childCount > 0) {
             val child = getChildAt(0)
@@ -101,16 +133,79 @@ class FullScrollBottomSheetView : NestedScrollView {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
+    private fun detectGesture(startPosition: Int, middlePosition: Int, endPosition: Int) {
+        val isFling = flingGestureDeterminedRangeDp.dpToPx().let {
+            (middlePosition - endPosition) > it || (middlePosition - endPosition) < -it
+        }
+        val isMoveUp = startPosition > endPosition && (startPosition - endPosition) > moveGestureDeterminedRangeDp.dpToPx()
+        val isMoveDown = startPosition < endPosition && (endPosition - startPosition) > moveGestureDeterminedRangeDp.dpToPx()
+
+        if (endPosition < expandPositionY) {
+            if (isFling && isMoveDown) {
+                setState(STATE_EXPAND)
+                return
+            }
+
+            if (expandPositionY - endPosition < stateDeterminedRageDP.dpToPx()) {
+                setState(STATE_EXPAND)
+            } else {
+                if (isMoveUp) {
+                    setState(STATE_OVER)
+                } else if (isMoveDown) {
+                    setState(STATE_OVER)
+                }
+            }
+        } else {
+            if (isFling.not() && expandPositionY - endPosition > -stateDeterminedRageDP.dpToPx()) {
+                setState(STATE_EXPAND)
+                return
+            }
+            if (isFling.not() && hiddenPositionY - endPosition < stateDeterminedRageDP.dpToPx()) {
+                setState(STATE_HIDDEN)
+                return
+            }
+
+            if (isFling && isMoveUp) {
+                setState(STATE_EXPAND)
+                return
+            } else if (isFling && isMoveDown) {
+                setState(STATE_HIDDEN)
+                return
+            }
+
+            val withinStateHalfRange: Boolean = stateDeterminedRageDP.dpToPx().let {
+                endPosition < halfPositionY + it && endPosition >halfPositionY - it
+            }
+            if (isFling.not() && withinStateHalfRange) {
+                setState(STATE_HALF)
+                return
+            }
+
+            when {
+                isMoveUp -> {
+                    setState(STATE_EXPAND)
+                }
+                isMoveDown -> {
+                    setState(STATE_HIDDEN)
+                }
+                else -> {
+                    setState(state!!)
+                }
+            }
+        }
+    }
+
     fun setState(@BottomSheetState state: Int) {
+        this.state = state
         when(state) {
             STATE_HIDDEN -> {
-                fullScroll(FOCUS_UP)
+                smoothScrollTo(0, 0, 1000)
             }
             STATE_HALF -> {
-                smoothScrollTo(0, height / 2)
+                smoothScrollTo(0, height / 2, 1000)
             }
             STATE_EXPAND -> {
-                smoothScrollTo(0, view.top - fromTop)
+                smoothScrollTo(0, height - fromTop - fromEnd, 1000)
             }
             STATE_OVER -> {
                 //Nothing
