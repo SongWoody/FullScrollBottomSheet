@@ -8,9 +8,22 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.IntDef
 import androidx.core.widget.NestedScrollView
 
 class FullScrollBottomSheetView : NestedScrollView {
+    @IntDef(value = [STATE_HIDDEN, STATE_HALF, STATE_EXPAND, STATE_OVER])
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class BottomSheetState
+
+    companion object {
+        const val STATE_HIDDEN  = 0
+        const val STATE_HALF    = 1
+        const val STATE_EXPAND  = 2
+        const val STATE_OVER    = 3
+    }
+
+
     private var enableScroll = true
 
     private val view: View by lazy {
@@ -18,6 +31,7 @@ class FullScrollBottomSheetView : NestedScrollView {
     }
 
     //attrs
+    private var fromTop: Int = 0
     private var fromEnd: Int = 0
 
     constructor(context: Context) : this(context, null)
@@ -35,8 +49,12 @@ class FullScrollBottomSheetView : NestedScrollView {
     }
 
     private fun settingAttrs(attrs: AttributeSet?) {
-        val typedArray: TypedArray = context.obtainStyledAttributes(attrs, R.styleable.FullScrollBottomSheetView)
+        val typedArray: TypedArray = context.obtainStyledAttributes(
+            attrs,
+            R.styleable.FullScrollBottomSheetView
+        )
 
+        fromTop = typedArray.getDimensionPixelSize(R.styleable.FullScrollBottomSheetView_fromTop, 0)
         fromEnd = typedArray.getDimensionPixelSize(R.styleable.FullScrollBottomSheetView_fromEnd, 0)
         typedArray.recycle()
     }
@@ -78,8 +96,25 @@ class FullScrollBottomSheetView : NestedScrollView {
 
         if (childCount > 0) {
             val child = getChildAt(0)
-            child.setPadding(0,heightPx - fromEnd,0,0)
+            child.setPadding(0, heightPx - fromEnd, 0, 0)
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    fun setState(@BottomSheetState state: Int) {
+        when(state) {
+            STATE_HIDDEN -> {
+                fullScroll(FOCUS_UP)
+            }
+            STATE_HALF -> {
+                smoothScrollTo(0, height / 2)
+            }
+            STATE_EXPAND -> {
+                smoothScrollTo(0, view.top - fromTop)
+            }
+            STATE_OVER -> {
+                //Nothing
+            }
+        }
     }
 }
