@@ -38,7 +38,7 @@ class FullScrollBottomSheetView : NestedScrollView {
     }
 
     var stateDeterminedRageDP = 80
-    var flingGestureDeterminedRangeDp = 10
+    var flingGestureDeterminedRangeDp = 40
     var moveGestureDeterminedRangeDp = 10
 
     private var hiddenPositionY = 0
@@ -74,6 +74,7 @@ class FullScrollBottomSheetView : NestedScrollView {
         typedArray.recycle()
     }
 
+    var isTouchDown = false
     var touchStartPosition  = 0
     var touchMiddlePosition = 0
     var touchEndPosition    = 0
@@ -81,6 +82,7 @@ class FullScrollBottomSheetView : NestedScrollView {
         val contentRect = getContentViewRect()
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                isTouchDown = true
                 touchStartPosition = contentRect.top - scrollViewY
                 enableScroll = contentRect.contains(ev.rawX.toInt(), ev.rawY.toInt())
             }
@@ -88,6 +90,7 @@ class FullScrollBottomSheetView : NestedScrollView {
                 touchMiddlePosition = contentRect.top - scrollViewY
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                isTouchDown = false
                 touchEndPosition = contentRect.top - scrollViewY
                 enableScroll = true
             }
@@ -131,6 +134,17 @@ class FullScrollBottomSheetView : NestedScrollView {
             child.setPadding(0, heightPx - fromEnd, 0, 0)
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+        super.onScrollChanged(l, t, oldl, oldt)
+
+        if (!isTouchDown && state == STATE_OVER) {
+            val contentRect = getContentViewRect()
+            if (contentRect.top > expandPositionY) {
+                setState(STATE_EXPAND)
+            }
+        }
     }
 
     private fun detectGesture(startPosition: Int, middlePosition: Int, endPosition: Int) {
