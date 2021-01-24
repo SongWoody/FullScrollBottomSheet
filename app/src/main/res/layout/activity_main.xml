@@ -59,7 +59,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:fromTop="10dp"
-            app:fromEnd="50dp">
+            app:fromEnd="50dp"
+            app:dimPercent="0.8">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -3,14 +3,17 @@ package com.example.fullscrollbottomsheet
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.TypedArray
+import android.graphics.Canvas
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.ColorInt
 import androidx.annotation.IntDef
 import androidx.core.widget.NestedScrollView
 import com.example.fullscrollbottomsheet.utils.dpToPx
+import kotlin.math.min
 
 class FullScrollBottomSheetView : NestedScrollView {
     @IntDef(value = [STATE_HIDDEN, STATE_HALF, STATE_EXPAND, STATE_OVER])
@@ -48,6 +51,7 @@ class FullScrollBottomSheetView : NestedScrollView {
     //attrs
     private var fromTop: Int = 0
     private var fromEnd: Int = 0
+    private var dimPercent = 0.0f
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
@@ -71,6 +75,7 @@ class FullScrollBottomSheetView : NestedScrollView {
 
         fromTop = typedArray.getDimensionPixelSize(R.styleable.FullScrollBottomSheetView_fromTop, 0)
         fromEnd = typedArray.getDimensionPixelSize(R.styleable.FullScrollBottomSheetView_fromEnd, 0)
+        dimPercent = typedArray.getFloat(R.styleable.FullScrollBottomSheetView_dimPercent, 0f)
         typedArray.recycle()
     }
 
@@ -134,6 +139,11 @@ class FullScrollBottomSheetView : NestedScrollView {
             child.setPadding(0, heightPx - fromEnd, 0, 0)
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        canvas.drawColor(getDimColor(dimPercent, progressFromBottomToTop()))
+        super.onDraw(canvas)
     }
 
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
@@ -225,5 +235,18 @@ class FullScrollBottomSheetView : NestedScrollView {
                 //Nothing
             }
         }
+    }
+
+    @ColorInt
+    private fun getDimColor(maxAlpha: Float, progress: Float): Int {
+        return ((((maxAlpha * 0xff) * min(progress, 1.0f)).toLong() and 0xff) shl (4 * 6)).toInt()
+    }
+
+    /**
+     * compute progress
+     * @return progress
+     */
+    private fun progressFromBottomToTop(): Float {
+        return (hiddenPositionY - getContentViewRect().top + scrollViewY).toFloat() / (hiddenPositionY - expandPositionY).toFloat()
     }
 }

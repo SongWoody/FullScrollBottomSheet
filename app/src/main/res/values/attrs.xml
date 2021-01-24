@@ -3,5 +3,6 @@
     <declare-styleable name="FullScrollBottomSheetView">
         <attr name="fromTop" format="dimension"/>
         <attr name="fromEnd" format="dimension"/>
+        <attr name="dimPercent" format="float"/>
     </declare-styleable>
 </resources>
