@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupFullScrollBottomSheet() {
         supportFragmentManager
                 .beginTransaction()
-                .replace(mBinding.mBottomSheetContent.id, BottomSheetFragment.newInstance(), BottomSheetFragment.TAG)
+                .replace(mBinding.mBottomSheetContent.id, BottomFragment.newInstance(), BottomFragment.TAG)
                 .commitAllowingStateLoss()
     }
 }

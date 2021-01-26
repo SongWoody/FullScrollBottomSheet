@@ -8,14 +8,14 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.example.fullscrollbottomsheet.databinding.FragmentBottomSheetBinding
 
-class BottomSheetFragment: Fragment() {
+class BottomFragment: Fragment() {
 
     companion object {
         const val TAG: String = "BottomSheetFragment"
 
-        fun newInstance(): BottomSheetFragment {
+        fun newInstance(): BottomFragment {
             val args = Bundle()
-            val playScreenFragment = BottomSheetFragment()
+            val playScreenFragment = BottomFragment()
             playScreenFragment.arguments = args
             return playScreenFragment
         }

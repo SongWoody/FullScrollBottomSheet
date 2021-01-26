@@ -15,7 +15,7 @@ import androidx.core.widget.NestedScrollView
 import com.example.fullscrollbottomsheet.utils.dpToPx
 import kotlin.math.min
 
-class FullScrollBottomSheetView : NestedScrollView {
+class BottomScrollView : NestedScrollView {
     @IntDef(value = [STATE_HIDDEN, STATE_HALF, STATE_EXPAND, STATE_OVER])
     @Retention(AnnotationRetention.SOURCE)
     annotation class BottomSheetState
